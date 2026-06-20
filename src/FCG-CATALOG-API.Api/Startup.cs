@@ -1,5 +1,7 @@
 using System.Text.Json.Serialization;
-using MassTransit.Futures.Contracts;
+using FCG_CATALOG_API.Api.Extensions;
+using FCG_CATALOG_API.Infra;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using Serilog;
 
@@ -25,10 +27,10 @@ public class Startup
                 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             });
 
-        //services.AddJwtAuthentication(_Configuration);
-        //services.AddAuthorizationPolicies();
-        //services.AddConfigureInfra();
-        //services.AddApplicationConfiguration();
+        services.AddJwtAuthentication(_Configuration);
+        services.AddAuthorizationPolicies();
+        services.AddConfigureInfra(_Configuration);
+        services.AddApplicationConfiguration();
         services.AddHttpClient();
         services.AddSwaggerGen(s =>
         {
@@ -53,16 +55,23 @@ public class Startup
             );
         });
 
-        //services.AddDbContext<AppDbContext>(options => options.UseNpgsql(_Configuration.GetConnectionString("Postgres")).UseSnakeCaseNamingConvention());
+        services.AddDbContext<AppDbContext>(opts =>
+            opts.UseNpgsql(_Configuration.GetConnectionString("Postgres"))
+                .UseSnakeCaseNamingConvention());
     }
+
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
         if (env.IsDevelopment())
-        {
             app.UseDeveloperExceptionPage();
-            app.UseSwagger();
-            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Sales API v1"));
-        }
+
+        app.UseSwagger();
+        app.UseSwaggerUI(c =>
+        {
+            c.SwaggerEndpoint("/swagger/v1/swagger.json", "FCG Catalog API v1");
+            c.DisplayRequestDuration();
+        });
+
         app.UseHttpsRedirection();
         app.UseRouting();
         app.UseAuthentication();
@@ -73,5 +82,9 @@ public class Startup
         {
            endpoints.MapControllers();
         });
+
+        using var scope = app.ApplicationServices.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.Database.Migrate();
     }
 }
