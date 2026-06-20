@@ -1,4 +1,3 @@
-
 using System.Diagnostics;
 
 namespace FCG_CATALOG_API.Api;
