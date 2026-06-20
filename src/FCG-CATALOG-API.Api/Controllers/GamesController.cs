@@ -10,7 +10,6 @@ using System.Security.Claims;
 
 namespace FCG_CATALOG_API.Api.Controllers;
 
-/// <summary>Gerenciamento de jogos da plataforma FCG.</summary>
 [ApiController]
 [Route("api/v1/games")]
 [Produces("application/json")]
@@ -147,7 +146,8 @@ public class GamesController : BaseController
     {
         try
         {
-            var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
+            //var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
+            var userId = Guid.Empty;
             var dto = new AcquireGameDto { GameId = id, UserId = userId };
 
             var result = await _gameService.AcquireGame(dto);
