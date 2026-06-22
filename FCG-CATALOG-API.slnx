@@ -1,0 +1,18 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/FCG-CATALOG-API.Api/">
+    <Project Path="src/FCG-CATALOG-API.Api/FCG-CATALOG-API.Api.csproj" />
+  </Folder>
+  <Folder Name="/src/FCG-CATALOG-API.Application/">
+    <Project Path="src/FCG-CATALOG-API.Application/FCG-CATALOG-API.Application.csproj" />
+  </Folder>
+  <Folder Name="/src/FCG-CATALOG-API.Domain/">
+    <Project Path="src/FCG-CATALOG-API.Domain/FCG-CATALOG-API.Domain.csproj" />
+  </Folder>
+  <Folder Name="/src/FCG-CATALOG-API.Infra/">
+    <Project Path="src/FCG-CATALOG-API.Infra/FCG-CATALOG-API.Infra.csproj" />
+  </Folder>
+  <Folder Name="/src/FCG-CATALOG-API.Tests/">
+    <Project Path="src/FCG-CATALOG-API.Tests/FCG-CATALOG-API.Tests.csproj" />
+  </Folder>
+</Solution>
