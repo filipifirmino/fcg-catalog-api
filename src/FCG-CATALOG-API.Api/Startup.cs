@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using FCG_CATALOG_API.Api.Extensions;
 using FCG_CATALOG_API.Infra;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.OpenApi;
 using Serilog;
 
@@ -21,6 +22,9 @@ public class Startup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        services.AddHealthChecks()
+            .AddCheck("self", () => HealthCheckResult.Healthy("API is running"));
+
         services.AddControllers()
         .AddJsonOptions(options =>
             {
@@ -72,7 +76,11 @@ public class Startup
             c.DisplayRequestDuration();
         });
 
-        app.UseHttpsRedirection();
+        app.UseWhen(context => !context.Request.Path.StartsWithSegments("/health"), branch =>
+        {
+            branch.UseHttpsRedirection();
+        });
+
         app.UseRouting();
         app.UseAuthentication();
         app.UseAuthorization();
@@ -81,10 +89,8 @@ public class Startup
         app.UseEndpoints(endpoints =>
         {
            endpoints.MapControllers();
+           endpoints.MapGet("/health", () => Results.Ok(new { status = "Healthy" })).AllowAnonymous();
         });
 
-        using var scope = app.ApplicationServices.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        db.Database.Migrate();
     }
 }
