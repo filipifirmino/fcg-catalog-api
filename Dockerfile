@@ -14,10 +14,9 @@ RUN dotnet publish "src/FCG-CATALOG-API.Api/FCG-CATALOG-API.Api.csproj" -c Relea
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
 WORKDIR /app
 
-RUN adduser -D -u 1001 catalogApiUser && chown -R catalogApiUser /app
-COPY --from=build /app/publish .
-
+COPY --chown=catalogApiUser:catalogApiUser --from=build /app/publish .
 USER catalogApiUser
+
 EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 CMD wget -qO- http://127.0.0.1:8080/health || exit 1
