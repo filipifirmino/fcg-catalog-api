@@ -2,7 +2,11 @@ using System.Text.Json.Serialization;
 using FCG_CATALOG_API.Api.Extensions;
 using FCG_CATALOG_API.Infra;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.OpenApi;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Http;
+using System.Linq;
 using Serilog;
 
 namespace FCG_CATALOG_API.Api;
@@ -21,6 +25,9 @@ public class Startup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        services.AddHealthChecks()
+            .AddCheck("self", () => HealthCheckResult.Healthy("API is running"));
+
         services.AddControllers()
         .AddJsonOptions(options =>
             {
@@ -72,7 +79,11 @@ public class Startup
             c.DisplayRequestDuration();
         });
 
-        app.UseHttpsRedirection();
+        app.UseWhen(context => !context.Request.Path.StartsWithSegments("/health"), branch =>
+        {
+            branch.UseHttpsRedirection();
+        });
+
         app.UseRouting();
         app.UseAuthentication();
         app.UseAuthorization();
@@ -81,6 +92,19 @@ public class Startup
         app.UseEndpoints(endpoints =>
         {
            endpoints.MapControllers();
+           endpoints.MapHealthChecks("/health", new HealthCheckOptions
+           {
+               ResponseWriter = async (context, report) =>
+               {
+                   context.Response.ContentType = "application/json";
+                   var result = System.Text.Json.JsonSerializer.Serialize(new
+                   {
+                       status = report.Status.ToString(),
+                       checks = report.Entries.Select(e => new { name = e.Key, status = e.Value.Status.ToString(), description = e.Value.Description })
+                   });
+                   await context.Response.WriteAsync(result);
+               }
+           }).AllowAnonymous();
         });
 
         using var scope = app.ApplicationServices.CreateScope();
