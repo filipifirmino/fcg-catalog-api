@@ -14,6 +14,8 @@ RUN dotnet publish "src/FCG-CATALOG-API.Api/FCG-CATALOG-API.Api.csproj" -c Relea
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
 WORKDIR /app
 
+RUN addgroup -S catalogApiUser && adduser -S -G catalogApiUser -u 1001 catalogApiUser
+
 COPY --chown=catalogApiUser:catalogApiUser --from=build /app/publish .
 USER catalogApiUser
 
