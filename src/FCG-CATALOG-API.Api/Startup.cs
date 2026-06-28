@@ -4,6 +4,9 @@ using FCG_CATALOG_API.Infra;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.OpenApi;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Http;
+using System.Linq;
 using Serilog;
 
 namespace FCG_CATALOG_API.Api;
@@ -89,8 +92,23 @@ public class Startup
         app.UseEndpoints(endpoints =>
         {
            endpoints.MapControllers();
-           endpoints.MapGet("/health", () => Results.Ok(new { status = "Healthy" })).AllowAnonymous();
+           endpoints.MapHealthChecks("/health", new HealthCheckOptions
+           {
+               ResponseWriter = async (context, report) =>
+               {
+                   context.Response.ContentType = "application/json";
+                   var result = System.Text.Json.JsonSerializer.Serialize(new
+                   {
+                       status = report.Status.ToString(),
+                       checks = report.Entries.Select(e => new { name = e.Key, status = e.Value.Status.ToString(), description = e.Value.Description })
+                   });
+                   await context.Response.WriteAsync(result);
+               }
+           }).AllowAnonymous();
         });
 
+        using var scope = app.ApplicationServices.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.Database.Migrate();
     }
 }
